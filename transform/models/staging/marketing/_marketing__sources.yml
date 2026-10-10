@@ -1,0 +1,19 @@
+version: 2
+
+sources:
+  - name: marketing
+    description: Ad platform and web analytics exports, one table per platform in that platform's own format.
+    schema: raw_marketing
+    config:
+      loaded_at_field: _loaded_at
+      freshness:
+        warn_after: {count: 26, period: hour}
+    tables:
+      - name: google_ads_campaign_stats
+        description: Daily Google Ads campaign stats. Cost in micros of the account currency (USD). The connector occasionally appends a re-synced day instead of replacing it.
+      - name: meta_ads_insights
+        description: Daily Meta Ads campaign insights. Spend is a decimal string in the ad account currency (EUR).
+      - name: linkedin_ads_analytics
+        description: Daily LinkedIn campaign analytics. Campaigns are identified by URN; cost already in USD.
+      - name: web_traffic_daily
+        description: Daily sessions per default channel group from the web analytics tool.

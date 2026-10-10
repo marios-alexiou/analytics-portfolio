@@ -1,0 +1,13 @@
+country_code,country_name,region
+US,United States,north_america
+CA,Canada,north_america
+AU,Australia,apac
+GB,United Kingdom,uk_ireland
+IE,Ireland,uk_ireland
+DE,Germany,dach
+FR,France,western_europe
+NL,Netherlands,western_europe
+ES,Spain,southern_europe
+IT,Italy,southern_europe
+GR,Greece,southern_europe
+SE,Sweden,nordics

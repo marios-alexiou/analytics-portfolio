@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: stg_finance__fx_rates
+    description: >
+      Published FX rates, one row per business day and currency. Weekends and holidays are missing, and USD
+      has no row; both are filled downstream.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [rate_date, currency]
+    columns:
+      - name: rate_date
+        description: Business day the rate was published for.
+        data_tests: [not_null]
+      - name: currency
+        description: ISO currency code.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [EUR, GBP]
+      - name: usd_per_unit
+        description: US dollars per one unit of `currency`.
+        data_tests: [not_null]

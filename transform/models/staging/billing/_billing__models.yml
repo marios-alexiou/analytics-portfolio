@@ -1,0 +1,145 @@
+version: 2
+
+models:
+  - name: stg_billing__subscriptions
+    description: One row per subscription with its state at extract time. Amounts in major currency units.
+    columns:
+      - name: subscription_id
+        description: Primary key of the subscription in the billing system.
+        data_tests: [unique, not_null]
+      - name: account_id
+        description: Workspace that owns the subscription. A workspace that churns and returns gets a new subscription.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_app_db__accounts')
+                field: account_id
+      - name: status
+        description: >
+          Billing status at extract time. A subscription that requested cancellation stays `active` until the
+          end of the paid period; `past_due` means the latest invoice could not be collected.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [active, past_due, canceled]
+      - name: plan_id
+        description: Current plan.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('plans')
+                field: plan_id
+      - name: billing_period
+        description: monthly or annual. Annual subscriptions only change plan at renewal.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [monthly, annual]
+      - name: currency
+        description: ISO currency the customer is billed in (USD, EUR or GBP).
+      - name: unit_amount
+        description: Price per billing period in `currency`, major units. Internal QA subscriptions are priced at 0.
+      - name: cancel_at_period_end
+        description: True when the customer has cancelled but the paid period has not ended yet.
+      - name: cancel_reason
+        description: customer_request, payment_failed or refund. Null for subscriptions that never cancelled.
+      - name: started_at
+        description: When the subscription started (trial converted to paid), UTC.
+        data_tests: [not_null]
+      - name: cancel_requested_at
+        description: When cancellation was requested, UTC.
+      - name: ended_at
+        description: When the subscription stops being paid for, UTC. Can be in the future for pending cancellations.
+      - name: updated_at
+        description: Time of the last lifecycle event, UTC.
+
+  - name: stg_billing__subscription_events
+    description: >
+      Subscription lifecycle events, one row per event_id. Duplicate webhook deliveries are removed by keeping
+      the first delivery. Events that occurred but were not yet delivered at extract time are missing here.
+    columns:
+      - name: event_id
+        description: Primary key of the event.
+        data_tests: [unique, not_null]
+      - name: subscription_id
+        description: Subscription the event belongs to.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_billing__subscriptions')
+                field: subscription_id
+      - name: account_id
+        description: Workspace that owns the subscription.
+      - name: event_type
+        description: subscription_created, plan_changed or subscription_cancelled.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [subscription_created, plan_changed, subscription_cancelled]
+      - name: plan_id
+        description: Plan after the event.
+      - name: previous_plan_id
+        description: Plan before the event; only set for plan_changed.
+      - name: billing_period
+        description: monthly or annual.
+      - name: currency
+        description: Billing currency.
+      - name: unit_amount
+        description: Price per billing period after the event, major units.
+      - name: occurred_at
+        description: When the event happened in the billing system, UTC. For cancellations this is the request time.
+        data_tests: [not_null]
+      - name: effective_at
+        description: When the event takes effect, UTC. For cancellations this is the end of the paid period.
+        data_tests: [not_null]
+      - name: received_at
+        description: When the first delivery of the webhook was received, UTC.
+
+  - name: stg_billing__invoices
+    description: One row per invoice. Amounts in major units of the invoice currency.
+    columns:
+      - name: invoice_id
+        description: Primary key of the invoice.
+        data_tests: [unique, not_null]
+      - name: subscription_id
+        description: Subscription the invoice bills.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_billing__subscriptions')
+                field: subscription_id
+      - name: account_id
+        description: Workspace billed.
+      - name: billing_reason
+        description: >
+          subscription_create (first invoice), subscription_cycle (renewal) or subscription_update (proration after a
+          mid-period upgrade). Summing invoices is revenue billed, not MRR.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [subscription_create, subscription_cycle, subscription_update]
+      - name: status
+        description: paid, open (not yet paid at extract time) or uncollectible.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [paid, open, uncollectible]
+      - name: currency
+        description: Invoice currency.
+      - name: amount_due
+        description: Amount invoiced, major units.
+      - name: amount_refunded
+        description: Amount refunded on this invoice, major units; 0 when not refunded.
+      - name: period_start
+        description: Start of the service period billed, UTC.
+      - name: period_end
+        description: End of the service period billed, UTC.
+      - name: issued_at
+        description: When the invoice was issued, UTC.
+      - name: paid_at
+        description: When payment succeeded, UTC.
+      - name: refunded_at
+        description: When the invoice was refunded, UTC.

@@ -1,0 +1,13 @@
+version: 2
+
+sources:
+  - name: app_db
+    description: Replica of the Fieldcraft product database. Landed daily as strings.
+    schema: raw_app_db
+    config:
+      loaded_at_field: _loaded_at
+      freshness:
+        warn_after: {count: 26, period: hour}
+    tables:
+      - name: accounts
+        description: One row per workspace created through the signup form. Every signup starts a 14-day trial.

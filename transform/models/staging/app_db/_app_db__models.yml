@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: stg_app_db__accounts
+    description: >
+      One row per Fieldcraft workspace (account), with cleaned contact fields, a normalized country
+      and the acquisition channel derived from the signup UTM parameters.
+    columns:
+      - name: account_id
+        description: Primary key of the workspace in the product database.
+        data_tests: [unique, not_null]
+      - name: company_name
+        description: Company name as entered at signup, trimmed.
+      - name: email
+        description: Signup email, trimmed and lower-cased.
+        data_tests: [not_null]
+      - name: email_domain
+        description: Domain part of the signup email; used to match CRM companies.
+      - name: is_internal
+        description: True for workspaces created by Fieldcraft staff for QA; excluded from every business metric.
+        data_tests: [not_null]
+      - name: country_code
+        description: ISO country code, resolved from either the code or the country name typed at signup.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('country_codes')
+                field: country_code
+      - name: company_size
+        description: Employee band selected at signup.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["1-10", "11-50", "51-200", "201+"]
+      - name: utm_source
+        description: utm_source captured on the signup page; the network name for affiliate signups.
+      - name: utm_medium
+        description: utm_medium captured on the signup page.
+      - name: utm_campaign
+        description: utm_campaign captured on the signup page; holds the ad campaign ID for paid channels.
+      - name: affiliate_click_ref
+        description: Click reference passed by the affiliate network; joins to affiliate conversions.
+      - name: acquisition_channel
+        description: Marketing channel the signup is attributed to, derived from the UTM parameters (last touch).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [organic, paid_search, paid_social, linkedin, partner, referral, direct]
+      - name: created_at
+        description: Signup timestamp (UTC); also the trial start.
+        data_tests: [not_null]
+      - name: trial_ends_at
+        description: When the 14-day trial expires (UTC).

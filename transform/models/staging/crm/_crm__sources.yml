@@ -1,0 +1,19 @@
+version: 2
+
+sources:
+  - name: crm
+    description: Objects synced from the CRM. Sales reps maintain these records by hand.
+    schema: raw_crm
+    config:
+      loaded_at_field: _loaded_at
+      freshness:
+        warn_after: {count: 26, period: hour}
+    tables:
+      - name: owners
+        description: Sales reps who own companies and deals.
+      - name: companies
+        description: >
+          Companies in the CRM: sales-assisted signups and outbound prospects. The link to a Fieldcraft workspace
+          (fieldcraft_account_id) is filled in by reps and is often missing.
+      - name: deals
+        description: Sales opportunities in the new-business pipeline.

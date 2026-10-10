@@ -1,0 +1,27 @@
+version: 2
+
+seeds:
+  - name: country_codes
+    description: ISO country codes with display names and the sales region each country belongs to.
+    columns:
+      - name: country_code
+        description: ISO 3166-1 alpha-2 country code.
+        data_tests: [unique, not_null]
+      - name: country_name
+        description: English country name, also used to match signups that typed the name instead of the code.
+        data_tests: [unique, not_null]
+      - name: region
+        description: Sales region used for reporting.
+        data_tests: [not_null]
+
+  - name: plans
+    description: Fieldcraft's subscription plans and their order, used to classify plan changes as upgrades or downgrades.
+    columns:
+      - name: plan_id
+        description: Plan identifier as used by the billing system.
+        data_tests: [unique, not_null]
+      - name: plan_name
+        description: Plan name shown to customers.
+      - name: plan_tier
+        description: Plan rank; a higher tier is a more expensive plan.
+        data_tests: [unique, not_null]

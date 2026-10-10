@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: finance
+    description: Reference data maintained by finance.
+    schema: raw_finance
+    tables:
+      - name: fx_rates
+        description: Daily reference rates, USD per unit of currency. Published on business days only; USD itself is not listed.

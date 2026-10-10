@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DBT_PROFILES_DIR: .
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r requirements.txt
+          cd transform && ../.venv/bin/dbt deps
+
+      - name: Generator tests
+        run: make test
+
+      - name: Generate and load raw data
+        run: make data
+
+      - name: dbt build
+        run: make build
+
+      - name: Lint
+        run: make lint

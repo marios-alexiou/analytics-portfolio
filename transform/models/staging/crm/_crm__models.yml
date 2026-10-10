@@ -1,0 +1,91 @@
+version: 2
+
+models:
+  - name: stg_crm__owners
+    description: One row per sales rep.
+    columns:
+      - name: owner_id
+        description: Primary key of the rep in the CRM.
+        data_tests: [unique, not_null]
+      - name: owner_name
+        description: Rep's full name.
+      - name: owner_email
+        description: Rep's work email, lower-cased.
+      - name: sales_team
+        description: smb, mid_market or enterprise.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [smb, mid_market, enterprise]
+
+  - name: stg_crm__companies
+    description: >
+      One row per CRM company. The domain is normalized (no protocol, www. or trailing slash, lower-case) so
+      companies without an account_id can be matched to workspaces by email domain.
+    columns:
+      - name: company_id
+        description: Primary key of the company in the CRM.
+        data_tests: [unique, not_null]
+      - name: company_name
+        description: Company name, trimmed.
+      - name: company_domain
+        description: Normalized website domain.
+        data_tests: [not_null]
+      - name: country_code
+        description: ISO country code.
+      - name: account_id
+        description: Fieldcraft workspace linked by the rep. Missing for prospects and for some customers.
+      - name: owner_id
+        description: Rep who owns the company.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_crm__owners')
+                field: owner_id
+      - name: lifecycle_stage
+        description: lead, opportunity, customer or former_customer, as maintained in the CRM.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [lead, opportunity, customer, former_customer]
+      - name: created_at
+        description: When the company was created in the CRM, UTC.
+      - name: updated_at
+        description: Last modification in the CRM, UTC.
+
+  - name: stg_crm__deals
+    description: One row per deal in the new-business pipeline.
+    columns:
+      - name: deal_id
+        description: Primary key of the deal in the CRM.
+        data_tests: [unique, not_null]
+      - name: company_id
+        description: Company the deal belongs to.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_crm__companies')
+                field: company_id
+      - name: owner_id
+        description: Rep who owns the deal.
+      - name: pipeline
+        description: CRM pipeline; only new_business exists today.
+      - name: deal_stage
+        description: Current stage of the deal.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [qualified, demo_scheduled, proposal_sent, closed_won, closed_lost]
+      - name: is_closed
+        description: True when the deal is won or lost.
+      - name: is_won
+        description: True when the deal is won.
+      - name: amount
+        description: Expected annual contract value in `currency`, major units.
+      - name: currency
+        description: ISO currency of `amount`.
+      - name: created_at
+        description: When the deal was created, UTC.
+      - name: close_date
+        description: Date the deal was won or lost; null while open.

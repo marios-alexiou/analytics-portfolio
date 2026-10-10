@@ -1,0 +1,14 @@
+fieldcraft:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('DUCKDB_PATH', '../data/fieldcraft.duckdb') }}"
+      threads: 4
+    bigquery:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROJECT', 'set-GCP_PROJECT') }}"
+      dataset: fieldcraft
+      location: EU
+      threads: 4

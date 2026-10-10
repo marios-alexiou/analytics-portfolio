@@ -1,0 +1,13 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff
+        entry: .venv/bin/ruff check
+        language: system
+        types: [python]
+      - id: sqlfluff
+        name: sqlfluff
+        entry: env DUCKDB_PATH=data/fieldcraft.duckdb .venv/bin/sqlfluff lint
+        language: system
+        files: ^transform/models/.*\.sql$

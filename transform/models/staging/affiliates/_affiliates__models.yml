@@ -1,0 +1,50 @@
+version: 2
+
+x-conversion-columns: &conversion_columns
+  - name: affiliate_network
+    description: Network that reported the conversion.
+  - name: conversion_id
+    description: Conversion ID in the network; unique within the network.
+    data_tests: [unique, not_null]
+  - name: click_ref
+    description: >
+      Click reference the network attributes the conversion to; joins to stg_app_db__accounts.affiliate_click_ref.
+      Networks occasionally report conversions for clicks that never produced a Fieldcraft signup.
+    data_tests:
+      - not_null
+      - relationships:
+          arguments:
+            to: ref('stg_app_db__accounts')
+            field: affiliate_click_ref
+          config:
+            severity: warn
+  - name: converted_at
+    description: When the referred customer converted to paid, UTC.
+    data_tests: [not_null]
+  - name: conversion_status
+    description: Status normalized across networks. pending until the 30-day validation window ends.
+    data_tests:
+      - accepted_values:
+          arguments:
+            values: [pending, approved, reversed]
+  - name: network_status
+    description: Status exactly as the network reports it.
+  - name: commission_amount
+    description: Commission owed to the network, in `commission_currency`, major units.
+  - name: commission_currency
+    description: Currency the network reports the commission in.
+  - name: last_pulled_at
+    description: Time of the latest API pull that included the conversion, UTC.
+
+models:
+  - name: stg_affiliates__affinet_conversions
+    description: Latest state of each Affinet conversion.
+    columns: *conversion_columns
+
+  - name: stg_affiliates__linkloop_conversions
+    description: Latest state of each Linkloop conversion, with London local times converted to UTC.
+    columns: *conversion_columns
+
+  - name: stg_affiliates__refera_conversions
+    description: Latest state of each Refera conversion, with epoch timestamps and pence converted.
+    columns: *conversion_columns

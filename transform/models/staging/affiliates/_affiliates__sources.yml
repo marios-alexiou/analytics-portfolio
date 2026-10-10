@@ -1,0 +1,19 @@
+version: 2
+
+sources:
+  - name: affiliates
+    description: >
+      Daily pulls from each affiliate network's conversions API, stored as raw JSON. A conversion appears in
+      every pull until its status is final, so the same conversion has several rows.
+    schema: raw_affiliates
+    config:
+      loaded_at_field: _loaded_at
+      freshness:
+        warn_after: {count: 26, period: hour}
+    tables:
+      - name: affinet_conversions
+        description: Affinet API. ISO timestamps in UTC; commission in the sale currency.
+      - name: linkloop_conversions
+        description: Linkloop API. Dates as dd/mm/yyyy HH:MM in Europe/London local time; commission converted to USD.
+      - name: refera_conversions
+        description: Refera API. Epoch-millisecond timestamps; payouts in GBP pence.

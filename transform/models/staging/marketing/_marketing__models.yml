@@ -1,0 +1,65 @@
+version: 2
+
+x-ad-columns: &ad_columns
+  - name: report_date
+    description: Day the stats are reported for, in the ad account's time zone.
+    data_tests: [not_null]
+  - name: ad_platform
+    description: Ad platform the row comes from.
+  - name: campaign_id
+    description: Campaign ID prefixed with the platform, matching the utm_campaign on signups.
+    data_tests: [not_null]
+  - name: campaign_name
+    description: Campaign name in the ad platform.
+  - name: impressions
+    description: Ad impressions.
+  - name: clicks
+    description: Ad clicks.
+  - name: spend
+    description: Spend in `spend_currency`, major units.
+  - name: spend_currency
+    description: Currency of `spend` (the ad account currency).
+
+models:
+  - name: stg_marketing__google_ads
+    description: Google Ads spend per day and campaign, with re-synced duplicate days removed.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [report_date, campaign_id]
+    columns: *ad_columns
+
+  - name: stg_marketing__meta_ads
+    description: Meta Ads spend per day and campaign, in EUR.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [report_date, campaign_id]
+    columns: *ad_columns
+
+  - name: stg_marketing__linkedin_ads
+    description: LinkedIn Ads spend per day and campaign, with the campaign ID extracted from its URN.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [report_date, campaign_id]
+    columns: *ad_columns
+
+  - name: stg_marketing__web_traffic
+    description: >
+      Website sessions per day and channel group. The web analytics tool groups channels differently from
+      the signup UTMs (LinkedIn and Meta are both Paid Social).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [report_date, channel_group]
+    columns:
+      - name: report_date
+        description: Day of the sessions.
+        data_tests: [not_null]
+      - name: channel_group
+        description: Default channel group assigned by the web analytics tool.
+      - name: sessions
+        description: Sessions started on the website.
+      - name: engaged_sessions
+        description: Sessions that lasted over 10 seconds or viewed more than one page.
