@@ -382,7 +382,7 @@ class Simulator:
         while day <= self.end:
             for campaign_id, (cvr, ctr, cpc) in cfg.CAMPAIGN_ECONOMICS.items():
                 signups = by_campaign.get((day, campaign_id), 0)
-                clicks = max(1, round((signups + rng.uniform(0.2, 1.2)) / cvr * rng.uniform(0.85, 1.15)))
+                clicks = max(1, round((signups + rng.uniform(0.05, 0.3)) / cvr * rng.uniform(0.85, 1.15)))
                 impressions = round(clicks / ctr * rng.uniform(0.9, 1.1))
                 cost = clicks * cpc * rng.uniform(0.85, 1.15)
                 platform, number = campaign_id.split("_")
@@ -539,11 +539,12 @@ class Simulator:
             decided_at = sub["started_at"] + timedelta(days=30)
             ended = sub["ended_at"]
             reversed_ = (ended is not None and ended <= decided_at) or invoice["refunded_at"] is not None
+            first_month = invoice["amount_due"] / (12 if sub["billing_period"] == "annual" else 1)
             self._emit_conversion(
                 network=account["_network"], click_ref=account["affiliate_click_ref"],
                 converted_at=sub["started_at"], decided_at=decided_at,
                 final_status="reversed" if reversed_ else "approved",
-                commission_minor=round(invoice["amount_due"] * cfg.AFFILIATE_COMMISSION_RATE),
+                commission_minor=round(first_month * cfg.AFFILIATE_COMMISSION_MONTHS),
                 currency=invoice["currency"],
             )
 

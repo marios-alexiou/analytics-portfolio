@@ -1,0 +1,112 @@
+version: 2
+
+models:
+  - name: int_fx_rates_daily
+    description: >
+      One USD rate per calendar day and currency (USD, EUR, GBP). Days without a published rate carry the last
+      published one forward; USD is always 1.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [date_day, currency]
+    columns:
+      - name: date_day
+        description: Calendar day.
+        data_tests: [not_null]
+      - name: currency
+        description: ISO currency code.
+        data_tests: [not_null]
+      - name: usd_per_unit
+        description: US dollars per one unit of `currency` on that day.
+        data_tests: [not_null]
+      - name: is_published_rate
+        description: False when the rate was carried forward from an earlier business day.
+
+  - name: int_subscription_periods
+    description: >
+      Subscription history as periods of constant price, built from the lifecycle events. A period starts when
+      a subscription is created or changes plan and ends at the next change or when the cancellation takes effect.
+    columns:
+      - name: subscription_period_id
+        description: Surrogate key of subscription and period start.
+        data_tests: [unique, not_null]
+      - name: subscription_id
+        description: Subscription the period belongs to.
+        data_tests: [not_null]
+      - name: account_id
+        description: Workspace that owns the subscription.
+        data_tests: [not_null]
+      - name: plan_id
+        description: Plan during the period.
+      - name: billing_period
+        description: monthly or annual.
+      - name: currency
+        description: Billing currency.
+      - name: unit_amount
+        description: Price per billing period during the period, major units.
+      - name: mrr_local
+        description: Monthly recurring revenue in `currency`; annual prices divided by 12.
+      - name: valid_from
+        description: When the period starts, UTC.
+        data_tests: [not_null]
+      - name: valid_to
+        description: When the period ends, UTC. Null while the period is still current.
+
+  - name: int_ad_spend_daily
+    description: Ad spend per day and campaign across Google, Meta and LinkedIn, in platform currency and in USD.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [report_date, campaign_id]
+    columns:
+      - name: report_date
+        description: Day of the spend.
+        data_tests: [not_null]
+      - name: ad_platform
+        description: google_ads, meta_ads or linkedin_ads.
+      - name: acquisition_channel
+        description: Channel the platform's signups are attributed to.
+        data_tests: [not_null]
+      - name: campaign_id
+        description: Campaign ID prefixed with the platform; matches utm_campaign on signups.
+      - name: campaign_name
+        description: Campaign name in the ad platform.
+      - name: impressions
+        description: Ad impressions.
+      - name: clicks
+        description: Ad clicks.
+      - name: spend
+        description: Spend in `spend_currency`.
+      - name: spend_currency
+        description: Ad account currency.
+      - name: spend_usd
+        description: Spend converted to USD at the day's rate.
+        data_tests: [not_null]
+
+  - name: int_affiliate_conversions
+    description: Latest state of every affiliate conversion across the three networks, matched to a workspace and converted to USD.
+    columns:
+      - name: affiliate_conversion_id
+        description: Surrogate key of network and conversion ID.
+        data_tests: [unique, not_null]
+      - name: affiliate_network
+        description: Network that reported the conversion.
+      - name: conversion_id
+        description: Conversion ID within the network.
+      - name: click_ref
+        description: Click reference reported by the network.
+      - name: account_id
+        description: Workspace whose signup carried the click reference. Null when the network reports a click we never saw.
+      - name: converted_at
+        description: When the referred customer converted to paid, UTC.
+      - name: conversion_status
+        description: pending, approved or reversed.
+      - name: commission_amount
+        description: Commission in `commission_currency`.
+      - name: commission_currency
+        description: Currency the network reports in.
+      - name: commission_usd
+        description: Commission converted to USD at the rate of the conversion day.
+        data_tests: [not_null]
+      - name: last_pulled_at
+        description: Latest API pull that included the conversion, UTC.

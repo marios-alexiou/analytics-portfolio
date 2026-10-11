@@ -29,6 +29,29 @@ deliver. The data is deliberately imperfect, the way real sources are:
 | Google Ads | Connector re-syncs a day by appending duplicates | `stg_marketing__google_ads` |
 | Affiliate APIs | Three JSON schemas; local London time, epoch millis and ISO UTC; three currencies; one row per daily pull; conversions for unknown clicks | `stg_affiliates__*` |
 
+## The models
+
+```
+staging/        one model per source table: types, renames, dedup, normalization
+intermediate/   FX rates for every day, subscription price periods, unified ad spend and affiliate conversions
+marts/core/     dim_dates, dim_accounts, fct_mrr_daily
+marts/finance/  mart_mrr_monthly: MRR bridge by region and channel
+marts/growth/   mart_trial_funnel, mart_acquisition_monthly (CAC, payback), mart_web_funnel_monthly
+```
+
+Some design choices:
+
+- **MRR is rebuilt from billing events at daily grain**, then checked against the billing system's own
+  current state on the extract date (`assert_mrr_matches_billing_state`). The monthly bridge must reconcile to the
+  cent (`assert_mrr_bridge_reconciles`).
+- **Exchange-rate movement is its own line in the bridge.** Customers are billed in USD, EUR and GBP; valuing each
+  day's change at that day's rate and booking the remainder as `fx_effect_usd` keeps new/expansion/churn honest.
+- **Marts hold counts and sums, not rates.** Conversion rates and CAC are ratios of sums in the BI tool, so
+  they stay correct at any roll-up.
+- **Silent row loss fails the build.** The first MRR numbers came out about 60% low: `dbt_utils.deduplicate` on DuckDB
+  natural-joins on every column, so any row with a NULL disappeared. The reconciliation tests caught it; the fix is
+  a `QUALIFY`-based macro and a test that every raw `event_id` reaches staging.
+
 ## Run it
 
 ```bash
@@ -53,7 +76,8 @@ tests/       Generator unit tests
 - [x] Synthetic sources with realistic data problems
 - [x] Staging layer with tests and docs on every column, portable across DuckDB and BigQuery
 - [x] CI: generator tests, dbt build, sqlfluff
-- [ ] Intermediate and marts: daily MRR and MRR movements, cohorts, trial funnel, CAC by channel, affiliate commissions
+- [x] Marts: daily MRR and MRR bridge with FX effect, trial funnel, CAC and payback by channel, web funnel
+- [x] Reconciliation tests: MRR bridge, events vs. billing state
 - [ ] Snapshots for CRM ownership history
 - [ ] PR impact report: CI comments every PR with row, key and column changes against `main`
 - [ ] Ingestion: config-driven extractor for the affiliate APIs, Terraform module

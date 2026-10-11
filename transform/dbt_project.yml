@@ -13,12 +13,21 @@ clean-targets: ["target", "dbt_packages"]
 
 vars:
   internal_email_domain: fieldcraft.io
+  # Reporting window; as_of_date is the day the raw data was extracted.
+  start_date: "2024-01-01"
+  as_of_date: "2026-09-30"
 
 models:
   fieldcraft:
     staging:
       +materialized: view
       +schema: staging
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts
 
 seeds:
   fieldcraft:

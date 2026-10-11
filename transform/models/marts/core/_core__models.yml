@@ -1,0 +1,135 @@
+version: 2
+
+models:
+  - name: dim_dates
+    description: One row per day of the reporting window (var start_date to var as_of_date).
+    columns:
+      - name: date_day
+        description: Calendar day.
+        data_tests: [unique, not_null]
+      - name: month_start
+        description: First day of the month.
+      - name: month_end
+        description: Last day of the month.
+      - name: is_period_end
+        description: True on the last day of each month and on the extract date, where period-end balances are read.
+      - name: calendar_year
+        description: Calendar year.
+      - name: calendar_quarter
+        description: Calendar quarter (1-4).
+      - name: calendar_month
+        description: Calendar month (1-12).
+
+  - name: dim_accounts
+    description: >
+      One row per Fieldcraft workspace with its acquisition attributes, conversion, current MRR and the matching
+      CRM company. Internal QA workspaces are kept but flagged; every mart excludes them.
+    columns:
+      - name: account_id
+        description: Primary key of the workspace.
+        data_tests: [unique, not_null]
+      - name: company_name
+        description: Company name entered at signup.
+      - name: email_domain
+        description: Domain of the signup email.
+      - name: is_internal
+        description: True for Fieldcraft's own QA workspaces.
+      - name: country_code
+        description: ISO country code.
+      - name: country_name
+        description: Country name.
+      - name: region
+        description: Sales region.
+        data_tests: [not_null]
+      - name: company_size
+        description: Employee band selected at signup.
+      - name: acquisition_channel
+        description: Last-touch channel of the signup.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('acquisition_channels')
+                field: acquisition_channel
+      - name: acquisition_campaign_id
+        description: Ad campaign of the signup, for paid search and social.
+      - name: created_at
+        description: Signup and trial start, UTC.
+      - name: trial_ends_at
+        description: Trial expiry, UTC.
+      - name: first_paid_at
+        description: When the workspace's first subscription started, UTC.
+      - name: first_plan_id
+        description: Plan of the first subscription.
+      - name: first_billing_period
+        description: Billing period of the first subscription.
+      - name: billing_currency
+        description: Currency the workspace is billed in.
+      - name: first_mrr_usd
+        description: MRR added when the workspace first converted, in USD at the rate of that day.
+      - name: days_to_convert
+        description: Calendar days from signup to first payment.
+      - name: converted_in_trial
+        description: True when the first payment happened before the trial expired.
+      - name: subscription_count
+        description: Number of subscriptions the workspace has had; above 1 after a churn and return.
+      - name: current_mrr_local
+        description: MRR on the extract date in the billing currency.
+      - name: current_mrr_usd
+        description: MRR on the extract date in USD at that day's rate.
+      - name: customer_status
+        description: active, churned, trialing, trial_expired or internal, as of the extract date.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [active, churned, trialing, trial_expired, internal]
+      - name: crm_company_id
+        description: Matching CRM company, linked by the rep or, failing that, by email domain.
+      - name: crm_match_method
+        description: account_id when the rep linked the company, email_domain when matched by domain.
+      - name: account_owner
+        description: Sales rep who owns the CRM company.
+      - name: sales_team
+        description: smb, mid_market or enterprise.
+
+  - name: fct_mrr_daily
+    description: >
+      Monthly recurring revenue per paying workspace per day, at end-of-day state, with the day's movement.
+      Has a row for every day a workspace pays, plus one zero row on the day it churns. Each day's USD change
+      splits into a customer-driven part (`mrr_change_usd`) and exchange-rate movement (`fx_effect_usd`), so
+      summing both over any period reconciles opening to closing MRR exactly.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [account_id, date_day]
+    columns:
+      - name: date_day
+        description: Calendar day.
+        data_tests: [not_null]
+      - name: account_id
+        description: Paying workspace.
+        data_tests: [not_null]
+      - name: currency
+        description: Billing currency.
+      - name: mrr_local
+        description: MRR at the end of the day in the billing currency.
+      - name: previous_mrr_local
+        description: MRR at the end of the previous row's day in the billing currency; 0 before the first payment or after a churn.
+      - name: usd_per_unit
+        description: FX rate used for the day.
+      - name: mrr_usd
+        description: MRR at the end of the day in USD at that day's rate.
+      - name: previous_mrr_usd
+        description: Previous row's `mrr_usd`.
+      - name: mrr_movement
+        description: >
+          new (first payment ever), reactivation (paying again after a churn), expansion, contraction,
+          churn (stopped paying) or unchanged.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [new, reactivation, expansion, contraction, churn, unchanged]
+      - name: mrr_change_usd
+        description: Customer-driven MRR change, valued at today's rate.
+      - name: fx_effect_usd
+        description: Part of the USD change caused by the exchange rate moving, not by the customer.

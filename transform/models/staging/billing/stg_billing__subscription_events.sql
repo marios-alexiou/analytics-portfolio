@@ -2,7 +2,7 @@ with
 
 -- Webhooks are delivered at least once: keep the first delivery of each event.
 deduplicated as (
-    {{ dbt_utils.deduplicate(
+    {{ deduplicate_rows(
         relation=source('billing', 'subscription_events'),
         partition_by='event_id',
         order_by='received_at',

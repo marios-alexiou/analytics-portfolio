@@ -1,0 +1,95 @@
+version: 2
+
+models:
+  - name: mart_trial_funnel
+    description: >
+      Trial-to-paid funnel by signup month, channel, region and company size. Holds counts only; compute rates
+      in the BI tool as ratios of sums (e.g. converted_in_trial / completed_trials) so they stay correct when
+      rolled up. Recent cohorts are still maturing, which is why each rate has its own denominator.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [signup_month, acquisition_channel, region, company_size]
+    columns:
+      - name: signup_month
+        description: Month the trial started.
+      - name: acquisition_channel
+        description: Channel the signup came from.
+      - name: region
+        description: Sales region.
+      - name: company_size
+        description: Employee band.
+      - name: signups
+        description: Trials started.
+      - name: completed_trials
+        description: Trials whose 14 days had ended by the extract date; denominator for in-trial conversion.
+      - name: converted_in_trial
+        description: Signups that paid before their trial expired.
+      - name: signups_with_30_days
+        description: Signups at least 30 days before the extract date; denominator for 30-day conversion.
+      - name: converted_within_30_days
+        description: Of those, signups that paid within 30 days.
+      - name: converted_to_date
+        description: Signups that have paid at any point up to the extract date.
+      - name: total_days_to_convert
+        description: Sum of signup-to-payment days of converted signups; divide by converted_to_date for the average.
+      - name: first_mrr_usd
+        description: MRR the cohort brought in at conversion, USD.
+
+  - name: mart_acquisition_monthly
+    description: >
+      Acquisition volume and cost per month and channel. Acquisition cost is ad spend plus affiliate commission
+      that was not reversed. Spend is counted in the month it is spent and customers in the month they convert,
+      so monthly CAC is noisy; use quarters or longer. Counts and sums only: CAC = acquisition_cost_usd /
+      new_customers, payback months = acquisition_cost_usd / new_mrr_usd.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [month_start, acquisition_channel]
+    columns:
+      - name: month_start
+        description: First day of the month.
+      - name: acquisition_channel
+        description: Marketing channel.
+      - name: channel_group
+        description: Web analytics channel group the channel falls under.
+      - name: is_paid
+        description: True for channels that cost money.
+      - name: signups
+        description: Trials started in the month.
+      - name: new_customers
+        description: Workspaces whose first payment was in the month.
+      - name: new_mrr_usd
+        description: MRR those workspaces brought in, USD.
+      - name: impressions
+        description: Ad impressions.
+      - name: clicks
+        description: Ad clicks.
+      - name: ad_spend_usd
+        description: Ad platform spend, USD.
+      - name: affiliate_commission_usd
+        description: Commission owed to affiliate networks for conversions in the month, excluding reversed ones, USD.
+      - name: acquisition_cost_usd
+        description: ad_spend_usd + affiliate_commission_usd.
+
+  - name: mart_web_funnel_monthly
+    description: >
+      Website sessions to signups to paying customers per month and web analytics channel group. Meta and
+      LinkedIn are both in Paid Social here because the web analytics tool does not separate them.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [month_start, channel_group]
+    columns:
+      - name: month_start
+        description: First day of the month.
+      - name: channel_group
+        description: Web analytics default channel group.
+      - name: sessions
+        description: Website sessions.
+      - name: engaged_sessions
+        description: Sessions over 10 seconds or with more than one page view.
+      - name: signups
+        description: Trials started.
+      - name: new_customers
+        description: Workspaces whose first payment was in the month.

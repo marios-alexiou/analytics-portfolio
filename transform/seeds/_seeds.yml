@@ -25,3 +25,19 @@ seeds:
       - name: plan_tier
         description: Plan rank; a higher tier is a more expensive plan.
         data_tests: [unique, not_null]
+
+  - name: acquisition_channels
+    description: >
+      The marketing channels a signup can be attributed to, how the web analytics tool groups each one, and
+      which ad platform it spends through.
+    columns:
+      - name: acquisition_channel
+        description: Channel as derived from signup UTMs.
+        data_tests: [unique, not_null]
+      - name: channel_group
+        description: Default channel group the web analytics tool reports sessions under. Meta and LinkedIn share Paid Social.
+        data_tests: [not_null]
+      - name: is_paid
+        description: True when acquiring through the channel costs money (ads or affiliate commission).
+      - name: ad_platform
+        description: Ad platform that carries the channel's spend; empty for channels without ad spend.

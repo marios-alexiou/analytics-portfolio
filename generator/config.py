@@ -100,8 +100,8 @@ CAMPAIGN_ECONOMICS: dict[str, tuple[float, float, float]] = {
     "gads_1004": (0.03, 0.030, 6.0),
     "meta_2001": (0.02, 0.012, 0.9),
     "meta_2002": (0.05, 0.020, 1.4),
-    "li_3001": (0.015, 0.006, 9.0),
-    "li_3002": (0.012, 0.005, 8.0),
+    "li_3001": (0.030, 0.006, 7.0),
+    "li_3002": (0.025, 0.005, 6.5),
 }
 
 # How the web analytics tool groups our channels, and its session-to-signup rate.
@@ -126,7 +126,8 @@ UTM_BY_CHANNEL: dict[str, tuple[str | None, str | None]] = {
 }
 
 AFFILIATE_NETWORKS = {"affinet": 0.45, "linkloop": 0.35, "refera": 0.20}
-AFFILIATE_COMMISSION_RATE = 0.20
+# Networks earn 1.5x the first month's revenue per referred paying customer.
+AFFILIATE_COMMISSION_MONTHS = 1.5
 
 CRM_OWNERS = [
     ("own_01", "Alex Turner", "smb"),

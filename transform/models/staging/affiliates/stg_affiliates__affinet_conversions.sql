@@ -14,7 +14,7 @@ parsed as (
 
 -- Each daily pull repeats the conversion; the latest pull has the current status.
 latest as (
-    {{ dbt_utils.deduplicate(relation='parsed', partition_by='conversion_id', order_by='pulled_at desc') }}
+    {{ deduplicate_rows(relation='parsed', partition_by='conversion_id', order_by='pulled_at desc') }}
 )
 
 select

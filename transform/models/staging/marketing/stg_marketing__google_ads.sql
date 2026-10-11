@@ -2,7 +2,7 @@ with
 
 -- Re-synced days are appended as exact copies; keep one row per day and campaign.
 deduplicated as (
-    {{ dbt_utils.deduplicate(
+    {{ deduplicate_rows(
         relation=source('marketing', 'google_ads_campaign_stats'),
         partition_by='segments_date, campaign_id',
         order_by='_loaded_at desc',

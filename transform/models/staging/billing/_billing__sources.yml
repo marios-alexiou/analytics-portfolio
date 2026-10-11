@@ -15,5 +15,14 @@ sources:
         description: >
           Webhook log of subscription lifecycle events. Delivery is at-least-once, so the same event_id
           can appear more than once, and some events arrive days after they occurred.
+        columns:
+          - name: event_id
+            description: Event ID; not unique here because of repeated deliveries.
+            data_tests:
+              # Deduplication must never lose an event.
+              - relationships:
+                  arguments:
+                    to: ref('stg_billing__subscription_events')
+                    field: event_id
       - name: invoices
         description: Every invoice issued, including prorations for mid-period upgrades.

@@ -1,0 +1,45 @@
+version: 2
+
+models:
+  - name: mart_mrr_monthly
+    description: >
+      Monthly MRR bridge in USD per region and acquisition channel: starting MRR, the movements, the FX effect
+      and ending MRR. starting + new + expansion + contraction + churned + reactivation + fx = ending, enforced
+      by the assert_mrr_bridge_reconciles test. Contraction and churn are negative.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [month_start, region, acquisition_channel]
+    columns:
+      - name: month_start
+        description: First day of the month.
+      - name: region
+        description: Sales region of the workspaces.
+      - name: acquisition_channel
+        description: Channel the workspaces were acquired through.
+      - name: starting_mrr_usd
+        description: MRR at the end of the previous month.
+      - name: new_mrr_usd
+        description: MRR from workspaces paying for the first time.
+      - name: expansion_mrr_usd
+        description: MRR added by upgrades.
+      - name: contraction_mrr_usd
+        description: MRR lost to downgrades (negative).
+      - name: churned_mrr_usd
+        description: MRR lost from workspaces that stopped paying (negative).
+      - name: reactivation_mrr_usd
+        description: MRR from workspaces paying again after churning.
+      - name: fx_effect_usd
+        description: Change in USD MRR caused by exchange rates, with no customer action.
+      - name: ending_mrr_usd
+        description: MRR at the end of the month, or on the extract date for the current month.
+      - name: starting_customers
+        description: Paying workspaces at the end of the previous month.
+      - name: new_customers
+        description: Workspaces that paid for the first time during the month.
+      - name: reactivated_customers
+        description: Workspaces that returned during the month.
+      - name: churned_customers
+        description: Workspaces that stopped paying during the month.
+      - name: ending_customers
+        description: Paying workspaces at the end of the month.

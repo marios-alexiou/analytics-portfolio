@@ -1,0 +1,8 @@
+acquisition_channel,channel_group,is_paid,ad_platform
+organic,Organic Search,false,
+paid_search,Paid Search,true,google_ads
+paid_social,Paid Social,true,meta_ads
+linkedin,Paid Social,true,linkedin_ads
+partner,Affiliates,true,
+referral,Referral,false,
+direct,Direct,false,

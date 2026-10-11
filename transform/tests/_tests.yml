@@ -1,0 +1,9 @@
+version: 2
+
+data_tests:
+  - name: assert_mrr_bridge_reconciles
+    description: Every month and segment of mart_mrr_monthly reconciles starting MRR plus movements to ending MRR within one cent.
+  - name: assert_mrr_matches_billing_state
+    description: >
+      MRR rebuilt from webhook events equals the billing system's own subscription state on the extract date.
+      Catches lost or undelivered events and errors in the period logic.
