@@ -6,8 +6,8 @@ An end-to-end analytics stack for **Fieldcraft**, a fictional B2B SaaS company s
 field-service businesses. It covers the whole path: messy raw sources, ingestion, dbt modelling and tests,
 and the dashboards people read.
 
-Everything runs locally on DuckDB with no credentials. The same dbt project also targets BigQuery, which
-backs the Looker Studio dashboards.
+The data pipeline and Evidence dashboards run locally on DuckDB with no credentials. A BigQuery target
+is configured but has not yet been validated against BigQuery. Looker Studio reports are not built.
 
 ## The company and its data
 
@@ -52,6 +52,19 @@ Some design choices:
   natural-joins on every column, so any row with a NULL disappeared. The reconciliation tests caught it; the fix is
   a `QUALIFY`-based macro and a test that every raw `event_id` reaches staging.
 
+## Dashboard gallery
+
+These PDF exports show the Evidence dashboards using synthetic Fieldcraft data. They are static snapshots,
+not live reports; interactive filters are available in the local dashboard app.
+
+| Dashboard | Business question | Preview |
+|---|---|---|
+| SaaS overview | How is recurring revenue growing, and what explains the monthly change? | [View PDF](dashboards/saas-overview.pdf) |
+| Trial conversion | Which acquisition channels and signup cohorts convert to paid customers? | [View PDF](dashboards/trial-conversion.pdf) |
+| Acquisition economics | How do paid channels compare on acquisition cost and revenue payback? | [View PDF](dashboards/acquisition.pdf) |
+
+The PDFs retain the original browser print layout, including page breaks and localhost headers.
+
 ## Run it
 
 ### Local dashboards
@@ -83,17 +96,5 @@ generator/   Python simulation of the business, plus the data-quality problems
 scripts/     Loads raw files into DuckDB, one raw_<source> schema per source system
 transform/   dbt project (staging -> intermediate -> marts)
 tests/       Generator unit tests
+dashboards/  Evidence Markdown pages, shared components and DuckDB source queries
 ```
-
-## Roadmap
-
-- [x] Synthetic sources with realistic data problems
-- [x] Staging layer with tests and docs on every column, portable across DuckDB and BigQuery
-- [x] CI: generator tests, dbt build, sqlfluff
-- [x] Marts: daily MRR and MRR bridge with FX effect, trial funnel, CAC and payback by channel, web funnel
-- [x] Reconciliation tests: MRR bridge, events vs. billing state
-- [ ] Snapshots for CRM ownership history
-- [ ] PR impact report: CI comments every PR with row, key and column changes against `main`
-- [ ] Ingestion: config-driven extractor for the affiliate APIs, Terraform module
-- [ ] Dashboards: Looker Studio (BigQuery sandbox) and Evidence (dashboards as code)
-- [ ] Decision records and case studies
