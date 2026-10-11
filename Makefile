@@ -27,4 +27,13 @@ test:  ## Generator unit tests
 
 all: data build lint test  ## Everything CI runs
 
-.PHONY: help setup data build lint test all
+dashboard-setup:  ## Install the pinned open-source Evidence dependencies
+	cd dashboards && npm ci
+
+dashboard-build:  ## Extract existing DuckDB marts and build the dashboard site
+	cd dashboards && npm run sources && npm run build
+
+dashboard-preview:  ## Serve the built dashboards at http://127.0.0.1:3001
+	cd dashboards && npm run preview
+
+.PHONY: help setup data build lint test all dashboard-setup dashboard-build dashboard-preview

@@ -1,0 +1,4 @@
+name: fieldcraft
+type: duckdb
+options:
+  filename: ../../../data/fieldcraft.duckdb

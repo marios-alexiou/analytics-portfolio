@@ -12,3 +12,8 @@ transform/logs/
 transform/.user.yml
 
 .DS_Store
+
+dashboards/node_modules/
+dashboards/.evidence/
+dashboards/build/
+dashboards/.svelte-kit/

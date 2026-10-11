@@ -54,6 +54,20 @@ Some design choices:
 
 ## Run it
 
+### Local dashboards
+
+The open-source Evidence trial lives in `dashboards/`. Each dashboard is a Markdown page with SQL,
+charts and filters: SaaS overview, trial conversion and acquisition economics. They read only the synthetic
+DuckDB marts; no Google Cloud account is needed. The reference screenshots are not included.
+
+After building the dbt models, run `make dashboard-setup`, `make dashboard-build`, then
+`make dashboard-preview` and open http://127.0.0.1:3001.
+
+The legacy Evidence dependency tree has npm audit findings. This is a localhost trial, not an approved
+public deployment. Stop the preview before rebuilding; Evidence regenerates its working directory.
+
+### Data pipeline
+
 ```bash
 make setup   # Python 3.12 virtualenv, dependencies, dbt packages
 make data    # generate raw files and load them into data/fieldcraft.duckdb

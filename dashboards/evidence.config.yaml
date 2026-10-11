@@ -1,0 +1,21 @@
+appearance:
+  default: light
+  switcher: false
+theme:
+  colorPalettes:
+    default:
+      - "#2864d7"
+      - "#18a999"
+      - "#ed8466"
+      - "#9b78c8"
+      - "#e5b940"
+      - "#70b7de"
+  colors:
+    primary: "#2864d7"
+    positive: "#16866b"
+    negative: "#d64c63"
+plugins:
+  components:
+    "@evidence-dev/core-components": {}
+  datasources:
+    "@evidence-dev/duckdb": {}
